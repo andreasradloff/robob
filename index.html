@@ -35,7 +35,7 @@
 //  https://www.talater.com/annyang/
 
 if (annyang) {
-  var showFlickr = function(tag) {
+  var wikipedia = function(tag) {
     var url = '//sv.wikipedia.org/w/api.php?action=query&redirects=1&prop=extracts&format=json&callback=?&exintro=&titles='+tag;
     $.ajax({
         type: "GET",
@@ -58,11 +58,27 @@ if (annyang) {
 
     //snacka('Menar du ' + tag + '?');
   };
+
+  var hello = function() {
+      snacka('Hej! Vad heter du?');
+      annyang.addCommands({
+        '(Jag heter) *name': yourName
+      })
+  });
+
+  var yourName = function(name) {
+      snacka('Hej ' + name + ', trevligt att träffas');
+      annyang.removeCommands('(Jag heter) *name');
+  });
+
+  //snacka('Menar du ' + tag + '?');
+  };
   var commands = {
     // annyang will capture anything after a splat (*) and pass it to the function.
     // e.g. saying "Show me Batman and Robin" is the same as calling showFlickr('Batman and Robin');
-    'Vad är (en)(ett) *tag': showFlickr,
-    'length': 1
+    'Vad är (en)(ett) *tag': wikipedia,
+    'Hej( robot)': hello,
+    'length': 2
   };
 
   // Add our commands to annyang
@@ -77,8 +93,6 @@ if (annyang) {
   var snacka = function(text) {
     annyang.pause();
     var msg = new SpeechSynthesisUtterance(text);
-    msg.rate = 5; // 0.1 to 10
-    msg.pitch = 2; //0 to 2
     msg.lang = 'sv-SE';
     msg.onend = function (event) {
       annyang.start();

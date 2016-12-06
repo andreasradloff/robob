@@ -64,12 +64,13 @@ if (annyang) {
       annyang.addCommands({
         '(Jag heter) *name': yourName
       })
-  });
+  };
+
 
   var yourName = function(name) {
       snacka('Hej ' + name + ', trevligt att träffas');
       annyang.removeCommands('(Jag heter) *name');
-  });
+  };
 
   //snacka('Menar du ' + tag + '?');
   };
@@ -102,8 +103,6 @@ if (annyang) {
     $('#face').addClass('talking');
   }
 
-
-}
 
 
 

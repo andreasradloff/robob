@@ -49,7 +49,7 @@ if (annyang) {
             var result = data.query.pages;
             var markup = result[Object.keys(result)[0]].extract;
             var blurb = $('<div></div>').html(markup).text();
-            snacka(blurb);
+            snacka(tag + '... ' + blurb);
         },
         error: function (errorMessage) {
           snacka('Jag vet tyvärr inget om det');
@@ -92,7 +92,7 @@ if (annyang) {
   annyang.start();
 
   var snacka = function(text) {
-    annyang.pause();
+    annyang.abort();
     var msg = new SpeechSynthesisUtterance(text);
     msg.lang = 'sv-SE';
     msg.onend = function (event) {

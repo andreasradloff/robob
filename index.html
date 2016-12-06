@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html >
+<head>
+  <meta charset="UTF-8">
+  <title>Web Speech API Demo</title>
+
+      <style>
+      /* NOTE: The styles were added inline because Prefixfree needs access to your styles and they must be inlined if they are on local disk! */
+      body {
+  background-color: black;
+  font-size:30em;
+  text-align: center;
+  color:#2F2;
+}
+
+    </style>
+</head>
+^_^
+<body>
+ <script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.0/annyang.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script>
+//  https://www.talater.com/annyang/
+
+if (annyang) {
+  var showFlickr = function(tag) {
+    var url = 'http://sv.wikipedia.org/w/api.php?action=query&redirects=1&prop=extracts&format=json&callback=?&exintro=&titles='+tag;
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json; charset=utf-8",
+        async: false,
+        dataType: "json",
+        success: function (data, textStatus, jqXHR) {
+                      console.log(data);
+
+            var result = data.query.pages;
+            var markup = result[Object.keys(result)[0]].extract;
+            var blurb = $('<div></div>').html(markup).text();
+            snacka(blurb);
+        },
+        error: function (errorMessage) {
+          snacka('Jag vet tyvärr inget om det');
+        }
+    });
+
+    //snacka('Menar du ' + tag + '?');
+  };
+  var commands = {
+    // annyang will capture anything after a splat (*) and pass it to the function.
+    // e.g. saying "Show me Batman and Robin" is the same as calling showFlickr('Batman and Robin');
+    'Vad är (en)(ett) *tag': showFlickr,
+    'length': 1
+  };
+
+  // Add our commands to annyang
+  annyang.init(commands);
+  annyang.setLanguage('sv-SE');
+
+  annyang.debug();
+
+  // Start listening. You can call this here, or attach this call to an event, button, etc.
+  annyang.start();
+
+  var snacka = function(text) {
+    annyang.pause();
+    var msg = new SpeechSynthesisUtterance(text);
+    msg.rate = 5; // 0.1 to 10
+    msg.pitch = 2; //0 to 2
+    msg.lang = 'sv-SE';
+    msg.onend = function (event) {
+      annyang.start();
+    };
+    window.speechSynthesis.speak(msg);
+  }
+
+
+}
+
+
+
+</script>
+
+</body>
+</html>

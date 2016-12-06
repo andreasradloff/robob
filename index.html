@@ -12,10 +12,22 @@
   text-align: center;
   color:#2F2;
 }
+#face:after {
+  content:'^_^';
+}
+#face.talking:after {
+  animation-name: talk;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+}
+@keyframes talk {
+    0%   {content:'^=^'}
+    50%  {content:'^o^'}
+}
+
 
     </style>
 </head>
-^_^
 <body>
  <script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.0/annyang.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
@@ -70,8 +82,10 @@ if (annyang) {
     msg.lang = 'sv-SE';
     msg.onend = function (event) {
       annyang.start();
+      $('#face').removeClass('talking');
     };
     window.speechSynthesis.speak(msg);
+    $('#face').addClass('talking');
   }
 
 
@@ -80,6 +94,6 @@ if (annyang) {
 
 
 </script>
-
+<div id="face"></div>
 </body>
 </html>

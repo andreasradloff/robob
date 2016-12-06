@@ -24,7 +24,7 @@
 
 if (annyang) {
   var showFlickr = function(tag) {
-    var url = 'http://sv.wikipedia.org/w/api.php?action=query&redirects=1&prop=extracts&format=json&callback=?&exintro=&titles='+tag;
+    var url = '//sv.wikipedia.org/w/api.php?action=query&redirects=1&prop=extracts&format=json&callback=?&exintro=&titles='+tag;
     $.ajax({
         type: "GET",
         url: url,

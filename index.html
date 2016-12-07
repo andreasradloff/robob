@@ -35,8 +35,9 @@
 //  https://www.talater.com/annyang/
 
 if (annyang) {
-  var wikipedia = function(tag) {
-    var url = '//sv.wikipedia.org/w/api.php?action=query&redirects=1&prop=extracts&format=json&callback=?&exintro=&titles='+tag;
+  var currentMonolog;
+  var wikipedia = function(word) {
+    var url = '//sv.wikipedia.org/w/api.php?action=query&redirects=1&prop=extracts&format=json&callback=?&exintro=&titles='+word;
     $.ajax({
         type: "GET",
         url: url,
@@ -44,12 +45,21 @@ if (annyang) {
         async: false,
         dataType: "json",
         success: function (data, textStatus, jqXHR) {
-                      console.log(data);
+            console.log(data);
+            if (data.query && data.query.pages) {
+              currentMonolog = [];
+              var result = data.query.pages;
+              if (result[-1] == undefined) {
+                var markup = result[Object.keys(result)[0]].extract;
+                var blurb = $('<div></div>').html(markup).text();
+                currentMonolog = blurb.split('.');
+                currentMonolog.unshift(word);
+                tellMore(2);
+              } else {
+                snacka('Jag vet tyvärr inget om ' . word);
+              }
 
-            var result = data.query.pages;
-            var markup = result[Object.keys(result)[0]].extract;
-            var blurb = $('<div></div>').html(markup).text();
-            snacka(tag + '... ' + blurb);
+            }
         },
         error: function (errorMessage) {
           snacka('Jag vet tyvärr inget om det');
@@ -72,12 +82,51 @@ if (annyang) {
       annyang.removeCommands('(Jag heter) *name');
   };
 
+  var tellMore = function(num) {
+    console.log(currentMonolog);
+    var text = '';
+    if (currentMonolog.length) {
+      if (!num) {
+        text = currentMonolog.join('.');
+        currentMonolog = [];
+      } else {
+        if (currentMonolog.length < num) {
+          num = currentMonolog.length;
+        }
+        for (var i = 0; i < num; i++) {
+          text += currentMonolog.shift() + '.';
+        };
+        if (currentMonolog.length) {
+          text += 'Vill du veta mer?';
+        }
+      }
+      snacka(text);
+    }
+  };
+
   //snacka('Menar du ' + tag + '?');
   };
   var commands = {
     // annyang will capture anything after a splat (*) and pass it to the function.
     // e.g. saying "Show me Batman and Robin" is the same as calling showFlickr('Batman and Robin');
-    'Vad är (en)(ett) *tag': wikipedia,
+    'Vad är (en)(ett) *word( för något)': wikipedia,
+    'Berätta om *word': wikipedia,
+    'Prata om *word': wikipedia,
+    'Vad betyder *word': wikipedia,
+    'Hur gör man *word': wikipedia,
+    'Var ligger *word': wikipedia,
+    'Vad äter *word': wikipedia,
+    'Var bor (det) *word': wikipedia,
+    'Var finns det *word': wikipedia,
+    'Vad kan du om *word': wikipedia,
+    'Vad vet du om *word': wikipedia,
+    'Vet du något om *word': wikipedia,
+    'Kan du något om *word': wikipedia,
+
+    'Berätta mer': tellMore,
+    'Mer': tellMore,
+    'Ja (tack)(gärna)': tellMore,
+
     'Hej( robot)': hello,
     'length': 2
   };
@@ -96,6 +145,7 @@ if (annyang) {
     var msg = new SpeechSynthesisUtterance(text);
     msg.lang = 'sv-SE';
     msg.onend = function (event) {
+      console.log('End talk');
       annyang.start();
       $('#face').removeClass('talking');
     };

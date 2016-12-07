@@ -11,6 +11,7 @@
   font-size:30em;
   text-align: center;
   color:#2F2;
+  font-family: monospace;
 }
 #face:after {
   content:'^_^';
@@ -19,13 +20,45 @@
   animation-name: talk;
   animation-duration: 1s;
   animation-iteration-count: infinite;
+  content:'ﾟoﾟ'
 }
 @keyframes talk {
-    0%   {content:'^=^'}
-    50%  {content:'^o^'}
+    0%   {content:'ﾟoﾟ'}
+    50%  {content:'ﾟOﾟ'}
 }
 
+/*
+essential styles:
+these make the slideshow work
+*/
 
+#slides {
+    position: relative;
+    height: 300px;
+    padding: 0px;
+    margin: 0px;
+    list-style-type: none;
+}
+
+.slide {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    z-index: 1;
+
+    -webkit-transition: opacity 1s;
+    -moz-transition: opacity 1s;
+    -o-transition: opacity 1s;
+    transition: opacity 1s;
+}
+
+.showing {
+    opacity: 1;
+    z-index: 2;
+}
     </style>
 </head>
 <body>
@@ -35,9 +68,9 @@
 //  https://www.talater.com/annyang/
 
 if (annyang) {
-  var currentMonolog;
+  var currentMonolog, currentImages;
   var wikipedia = function(word) {
-    var url = '//sv.wikipedia.org/w/api.php?action=query&redirects=1&prop=extracts&format=json&callback=?&exintro=&titles='+word;
+    var url = '//sv.wikipedia.org/w/api.php?action=query&redirects=1&prop=images%7Cextracts&format=json&callback=?&exintro=&titles='+word;
     $.ajax({
         type: "GET",
         url: url,
@@ -50,13 +83,15 @@ if (annyang) {
               currentMonolog = [];
               var result = data.query.pages;
               if (result[-1] == undefined) {
-                var markup = result[Object.keys(result)[0]].extract;
-                var blurb = $('<div></div>').html(markup).text();
+                var page = result[Object.keys(result)[0]],
+                  markup = page.extract;
+                  blurb = $('<div></div>').html(markup).text();
+                fetchWikiImages(page);
                 currentMonolog = blurb.split('.');
                 currentMonolog.unshift(word);
-                tellMore(2);
+                tellMore(4);
               } else {
-                snacka('Jag vet tyvärr inget om ' . word);
+                snacka('Jag vet tyvärr inget om ' + word);
               }
 
             }
@@ -65,17 +100,61 @@ if (annyang) {
           snacka('Jag vet tyvärr inget om det');
         }
     });
+  };
 
-    //snacka('Menar du ' + tag + '?');
+  var fetchWikiImages = function(page) {
+    $('#slides').html('');
+    if (page['images']) {
+      for (var i = 0, len = page['images'].length; i < len; i++) {
+        var image = page['images'][i],
+          title = image['title'],
+          imageUrlQuery;
+        if(title != 'Fil:Commons-logo.svg' 
+          && title != 'Fil:P vip.svg') {
+            title = title.replace('Fil:', '').replace(' ', '_');
+            imageUrlQuery = "//sv.wikipedia.org/w/api.php?action=query&titles=Bild:" + title + "&prop=imageinfo&iiprop=url&format=json&callback=?";
+            $.ajax({
+              type: "GET",
+              url: imageUrlQuery,
+              contentType: "application/json; charset=utf-8",
+              async: false,
+              dataType: "json",
+              success: function (data, textStatus, jqXHR) {
+                var result = data.query.pages,
+                  page = result[Object.keys(result)[0]],
+                  url = page['imageinfo'][0]['url'];
+                  addSlide(url);
+              },
+              error: function (errorMessage) {}
+            });
+        }
+      }
+    }
+  }
+    var slides,
+     currentSlide,
+    slideInterval;
+
+  var addSlide = function(image) {
+    $('#slides').append('<li class="slide"><img src="' + image + '"></li>');
+    slides = document.querySelectorAll('#slides .slide');
+    currentSlide = 0;
+    clearInterval(slideInterval);
+    slideInterval = setInterval(nextSlide,2000);
+
+    function nextSlide() {
+        slides[currentSlide].className = 'slide';
+        currentSlide = (currentSlide+1)%slides.length;
+        slides[currentSlide].className = 'slide showing';
+    }
   };
 
   var hello = function() {
       snacka('Hej! Vad heter du?');
       annyang.addCommands({
         '(Jag heter) *name': yourName
-      })
+      });
   };
-
 
   var yourName = function(name) {
       snacka('Hej ' + name + ', trevligt att träffas');
@@ -83,8 +162,9 @@ if (annyang) {
   };
 
   var tellMore = function(num) {
-    console.log(currentMonolog);
-    var text = '';
+    var text = '',
+      isMore = false;
+
     if (currentMonolog.length) {
       if (!num) {
         text = currentMonolog.join('.');
@@ -97,15 +177,24 @@ if (annyang) {
           text += currentMonolog.shift() + '.';
         };
         if (currentMonolog.length) {
-          text += 'Vill du veta mer?';
+          text += ' Ska jag berätta mer?';
+          isMore = true;
         }
       }
+
       snacka(text);
+
+      if (isMore) {
+        annyang.addCommands({
+          'Ja': tellMore
+        });
+      } else {
+        annyang.removeCommands('Ja');
+      }
+
     }
   };
 
-  //snacka('Menar du ' + tag + '?');
-  };
   var commands = {
     // annyang will capture anything after a splat (*) and pass it to the function.
     // e.g. saying "Show me Batman and Robin" is the same as calling showFlickr('Batman and Robin');
@@ -115,6 +204,7 @@ if (annyang) {
     'Vad betyder *word': wikipedia,
     'Hur gör man *word': wikipedia,
     'Var ligger *word': wikipedia,
+    'Vem är *word': wikipedia,
     'Vad äter *word': wikipedia,
     'Var bor (det) *word': wikipedia,
     'Var finns det *word': wikipedia,
@@ -128,7 +218,7 @@ if (annyang) {
     'Ja (tack)(gärna)': tellMore,
 
     'Hej( robot)': hello,
-    'length': 2
+    'length': 1
   };
 
   // Add our commands to annyang
@@ -152,11 +242,15 @@ if (annyang) {
     window.speechSynthesis.speak(msg);
     $('#face').addClass('talking');
   }
+};
 
 
 
 
 </script>
-<div id="face"></div>
+<div id="container">
+  <div id="face"></div>
+  <ul id="slides"></ul>
+</div>
 </body>
 </html>

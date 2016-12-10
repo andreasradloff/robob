@@ -97,6 +97,20 @@ these make the slideshow work
 <script>
 //  https://www.talater.com/annyang/
 
+/** 
+Fullscreen mode on click on screen
+**/
+addEventListener("click", function() {
+    var el = document.documentElement,
+      rfs = el.requestFullscreen
+        || el.webkitRequestFullScreen
+        || el.mozRequestFullScreen
+        || el.msRequestFullscreen 
+    ;
+
+    rfs.call(el);
+});
+
 if (annyang) {
   var currentMonolog, currentImages;
   var wikipedia = function(word) {

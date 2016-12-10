@@ -2,7 +2,7 @@
 <html >
 <head>
   <meta charset="UTF-8">
-  <title>Web Speech API Demo</title>
+  <title>Robob</title>
 
       <style>
       /* NOTE: The styles were added inline because Prefixfree needs access to your styles and they must be inlined if they are on local disk! */
@@ -12,6 +12,29 @@
   text-align: center;
   color:#2F2;
   font-family: monospace;
+  overflow:hidden;
+}
+body, html {
+    height:100%;
+  width:100%;
+}
+#container {
+  position: fixed; 
+  left: 0; 
+  
+  /* Preserve aspet ratio */
+  min-width: 100%;
+  min-height: 100%;
+  bottom: 0;
+  transition: bottom 2s;
+  transition-delay: 2s;
+}
+#container.slides-playing {
+  bottom: 100%;
+}
+#face {
+  height:100vh;
+  width:100%;
 }
 #face:after {
   content:'^_^';
@@ -27,6 +50,8 @@
     50%  {content:'ﾟOﾟ'}
 }
 
+
+
 /*
 essential styles:
 these make the slideshow work
@@ -34,7 +59,7 @@ these make the slideshow work
 
 #slides {
     position: relative;
-    height: 300px;
+    height: 100%;
     padding: 0px;
     margin: 0px;
     list-style-type: none;
@@ -48,11 +73,16 @@ these make the slideshow work
     height: 100%;
     opacity: 0;
     z-index: 1;
+    text-align: center;
 
     -webkit-transition: opacity 1s;
     -moz-transition: opacity 1s;
     -o-transition: opacity 1s;
     transition: opacity 1s;
+}
+.slide img {
+  height: 100vh;
+  width: auto;
 }
 
 .showing {
@@ -104,6 +134,7 @@ if (annyang) {
 
   var fetchWikiImages = function(page) {
     $('#slides').html('');
+    $('#container').removeClass('slides-playing');
     if (page['images']) {
       for (var i = 0, len = page['images'].length; i < len; i++) {
         var image = page['images'][i],
@@ -136,6 +167,7 @@ if (annyang) {
     slideInterval;
 
   var addSlide = function(image) {
+    $('#container').addClass('slides-playing');
     $('#slides').append('<li class="slide"><img src="' + image + '"></li>');
     slides = document.querySelectorAll('#slides .slide');
     currentSlide = 0;

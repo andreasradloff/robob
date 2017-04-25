@@ -10,13 +10,14 @@
   background-color: black;
   font-size:30em;
   text-align: center;
-  color:#2F2;
+  color:#07F;
   font-family: monospace;
   overflow:hidden;
 }
 body, html {
-    height:100%;
+  height:100%;
   width:100%;
+  margin: 0;
 }
 #container {
   position: fixed; 
@@ -109,6 +110,7 @@ addEventListener("click", function() {
     ;
 
     rfs.call(el);
+
 });
 
 if (annyang) {
@@ -182,7 +184,8 @@ if (annyang) {
 
   var addSlide = function(image) {
     $('#container').addClass('slides-playing');
-    $('#slides').append('<li class="slide"><img src="' + image + '"></li>');
+    $('#slides').append('<li class="slide"><img src="' + image + '"></li>').on('click', 
+      function(){ $('#container').removeClass('slides-playing'); });
     slides = document.querySelectorAll('#slides .slide');
     currentSlide = 0;
     clearInterval(slideInterval);

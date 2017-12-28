@@ -34,11 +34,14 @@ body, html {
   bottom: 100%;
 }
 #face {
+  background: url('img/ansiktesvg.svg');
+  background-size: 100% auto;
+  background-repeat: no-repeat;
   height:100vh;
   width:100%;
 }
 #face:after {
-  content:'^_^';
+  /*content:'^_^';*/
 }
 #face.talking:after {
   animation-name: talk;
@@ -51,7 +54,9 @@ body, html {
     50%  {content:'ﾟOﾟ'}
 }
 
-
+.thumbnail {
+  width:20%;
+}
 
 /*
 essential styles:
@@ -95,6 +100,8 @@ these make the slideshow work
 <body>
  <script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.0/annyang.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/pouchdb/6.2.0/pouchdb.min.js"></script>
+  <script src="js/pouchdb.upsert.min.js"></script>
 <script>
 //  https://www.talater.com/annyang/
 
@@ -112,6 +119,13 @@ addEventListener("click", function() {
     rfs.call(el);
 
 });
+
+/**
+DB
+**/
+var db = new PouchDB('pages');
+var imageDb = new PouchDB('images');
+
 
 if (annyang) {
   var currentMonolog, currentImages;
@@ -132,7 +146,9 @@ if (annyang) {
                 var page = result[Object.keys(result)[0]],
                   markup = page.extract;
                   blurb = $('<div></div>').html(markup).text();
+                  console.log(page);
                 fetchWikiImages(page);
+                savePage(page);
                 currentMonolog = blurb.split('.');
                 currentMonolog.unshift(word);
                 tellMore(4);
@@ -170,7 +186,10 @@ if (annyang) {
                 var result = data.query.pages,
                   page = result[Object.keys(result)[0]],
                   url = page['imageinfo'][0]['url'];
+                  saveImage(page);
                   addSlide(url);
+                  console.log(page);
+
               },
               error: function (errorMessage) {}
             });
@@ -178,9 +197,40 @@ if (annyang) {
       }
     }
   }
-    var slides,
-     currentSlide,
-    slideInterval;
+
+  var getBestImageUrl = function(page) {
+    if (page['images']) {
+      var image = page['images'][i],
+        title = image['title'],
+        imageDoc;
+
+        imageDoc = imagedb.get(title)
+          .catch(function (err) {
+            console.log(err);
+          });
+
+        return imageDoc['imageinfo'][0]['url'];
+    }
+  }
+
+  var savePage = function(page) {
+    page._timestamp = + new Date();
+    db.putIfNotExists(page.pageid, page)
+      .catch(function (err) {
+        console.log(err);
+      });
+  }
+
+  var saveImage = function(page) {
+    imageDb.putIfNotExists(page.title, page)
+      .catch(function (err) {
+        console.log(err);
+      });
+  }
+
+  var slides,
+   currentSlide,
+  slideInterval;
 
   var addSlide = function(image) {
     $('#container').addClass('slides-playing');
@@ -244,6 +294,19 @@ if (annyang) {
     }
   };
 
+  var renderGrid = function(containerId) {
+    db.allDocs().then(function (result) {
+      result.rows.map(function (row) {
+        var url = getBestImageUrl(row),
+          thumbnail = $('<img class="thumbnail">')
+            .attr('href', url);
+        $('#' + containerId).append(thumbnail);
+      });
+    }).catch(function (err) {
+      console.log(err);
+    });
+  };
+
   var commands = {
     // annyang will capture anything after a splat (*) and pass it to the function.
     // e.g. saying "Show me Batman and Robin" is the same as calling showFlickr('Batman and Robin');
@@ -277,7 +340,9 @@ if (annyang) {
   annyang.debug();
 
   // Start listening. You can call this here, or attach this call to an event, button, etc.
-  annyang.start();
+  //annyang.start();
+  wikipedia('hammarhaj');
+  renderGrid('grid');
 
   var snacka = function(text) {
     annyang.abort();
@@ -299,6 +364,7 @@ if (annyang) {
 </script>
 <div id="container">
   <div id="face"></div>
+  <div id="grid"></div>
   <ul id="slides"></ul>
 </div>
 </body>

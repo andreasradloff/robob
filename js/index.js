@@ -112,10 +112,13 @@ if (annyang) {
 
   var savePage = function(page) {
     page._timestamp = + new Date();
-    db.putIfNotExists(page.pageid, page)
+    if (page.pageid) {
+          db.putIfNotExists(page.pageid, page)
       .catch(function (err) {
         console.log(err);
       });
+    }
+
   }
 
   var saveImage = function(page) {
